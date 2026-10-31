@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "MarketPilot AI"
+description = "Une application SaaS de marketing, prospection et vente pour entrepreneurs et petites entreprises. Cette première version fournit une interface responsive, un écran de connexion non connecté, un tableau de bord et les espaces de navigation prêts à recevoir progressivement de vraies fonctionnalités."
+version = "1.0.0"
+id = "artifacts/marketpilot-ai"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18201
+
+[services.development]
+run = "pnpm --filter @workspace/marketpilot-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/marketpilot-ai", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/marketpilot-ai/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18201"
+BASE_PATH = "/"

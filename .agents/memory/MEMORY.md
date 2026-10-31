@@ -1,0 +1,1 @@
+- [MarketPilot budget and integrations](marketpilot-budget.md) — Keep every integration within the 0 FCFA budget; no paid services, subscriptions, or purchases.
