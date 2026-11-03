@@ -1,7 +1,9 @@
 # Configuration Supabase (en attente)
 
-Supabase n’est pas encore relié à MarketPilot AI. Ce dépôt ne crée pas de projet,
-ne change aucun abonnement et n’applique aucune migration.
+Les Secrets Supabase sont configurés et le point de santé Auth a répondu. Les
+migrations de profil ne sont pas appliquées et les flux d’inscription/connexion
+n’ont pas encore été testés avec un utilisateur réel. Ce dépôt ne crée pas de
+projet, ne change aucun abonnement et n’applique aucune migration.
 
 ## Variables d’environnement
 
@@ -29,13 +31,24 @@ n’autorise cette activation.
 
 ## Migration et RLS
 
-La migration `migrations/20261031000000_create_profiles_rls.sql` est un point de
-départ pour une table de profils. Elle active RLS, limite les opérations aux
-utilisateurs authentifiés et utilise `auth.uid()` pour ne permettre à chacun
-que de lire, créer ou modifier son propre profil. La suppression via le client
-n’est pas autorisée.
+Les migrations de profils doivent être appliquées dans l’ordre chronologique :
 
-Cette migration n’a pas été exécutée. Après création du projet, appliquez-la une
-seule fois avec Supabase CLI ou vérifiez son contenu puis exécutez-le dans
-l’éditeur SQL Supabase. Chaque nouvelle table contenant des données privées
-devra recevoir ses propres privilèges et politiques RLS avant d’être exposée.
+1. `migrations/20261031000000_create_profiles_rls.sql` crée la table de base.
+2. `migrations/20261103000000_auto_profile_on_signup.sql` retire les écritures
+   directes des rôles clients, conserve uniquement la lecture du profil propre,
+   crée automatiquement un profil après chaque inscription Auth et complète les
+   profils manquants des utilisateurs déjà inscrits.
+
+La seconde migration ne supprime pas de profil existant : son remplissage utilise
+`ON CONFLICT DO NOTHING`. Le déclencheur écrit avec une fonction
+`SECURITY DEFINER`, un `search_path` vide et des références qualifiées par schéma.
+Les clients `anon` et `authenticated` ne peuvent pas appeler directement cette
+fonction. Les utilisateurs `authenticated` n’ont que le droit de lecture, limité
+par RLS à leur propre ligne.
+
+L’application ne lance pas les migrations automatiquement. Vérifiez l’historique
+des migrations du projet distant avant de les appliquer, notamment si la première
+migration a été exécutée manuellement. Ne modifiez pas une migration déjà
+appliquée ; créez une nouvelle migration corrective si l’historique distant
+l’exige. Chaque nouvelle table contenant des données privées doit recevoir ses
+propres privilèges et politiques RLS avant d’être exposée.
