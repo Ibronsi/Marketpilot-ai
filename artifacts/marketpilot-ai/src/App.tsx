@@ -1,14 +1,14 @@
-import { useEffect, type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/auth/auth-context';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import DashboardPage from '@/pages/dashboard';
 import LoginPage from '@/pages/login';
-import ModulePage from '@/pages/module-page';
 import NotFoundPage from '@/pages/not-found';
-import { moduleConfigs } from '@/modules/module-config';
+import { CampaignsPage, ConversationsPage, CrmPage, MarketingPage, ProspectionPage } from '@/pages/data-pages';
+import SettingsPage from '@/pages/settings';
 import {
   Route,
   Switch,
@@ -22,11 +22,12 @@ function WorkspaceRoutes() {
   return (
     <Switch>
       <Route path="/" component={DashboardPage} />
-      {Object.entries(moduleConfigs).map(([path, config]) => (
-        <Route key={path} path={path}>
-          <ModulePage config={config} />
-        </Route>
-      ))}
+      <Route path="/marketing" component={MarketingPage} />
+      <Route path="/prospection" component={ProspectionPage} />
+      <Route path="/crm" component={CrmPage} />
+      <Route path="/conversations" component={ConversationsPage} />
+      <Route path="/campagnes" component={CampaignsPage} />
+      <Route path="/parametres" component={SettingsPage} />
       <Route component={NotFoundPage} />
     </Switch>
   );
@@ -47,12 +48,21 @@ function AuthLoadingScreen() {
 }
 
 function ProtectedWorkspace() {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+  const identity = status === 'authenticated' ? user?.id ?? null : status === 'unauthenticated' ? null : undefined;
+  const previousIdentity = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
     if (status === 'unauthenticated') setLocation('/login');
   }, [status, setLocation]);
+  useEffect(() => {
+    if (identity !== undefined) {
+      if (previousIdentity.current !== undefined && previousIdentity.current !== identity) queryClient.clear();
+      previousIdentity.current = identity;
+    }
+  }, [identity, queryClient]);
 
   if (status === 'unconfigured') {
     return <LoginPage />;

@@ -52,3 +52,33 @@ migration a été exécutée manuellement. Ne modifiez pas une migration déjà
 appliquée ; créez une nouvelle migration corrective si l’historique distant
 l’exige. Chaque nouvelle table contenant des données privées doit recevoir ses
 propres privilèges et politiques RLS avant d’être exposée.
+
+## Données de l’espace MarketPilot
+
+La migration `migrations/20261106000000_marketpilot_workspace.sql` ajoute les
+tables de prospects, brouillons marketing, plans de campagne, notes de suivi et
+préférences d’espace. Elle n’insère aucune donnée de démonstration et protège
+chaque ligne par `auth.uid()` et RLS. Les espaces « Conversations » et
+« Campagnes » sont des outils de suivi et de planification : ils n’importent,
+n’envoient ni ne publient de messages.
+
+Cette migration est un fichier local. Son exécution manuelle dans Supabase SQL
+Editor ne l’inscrit pas automatiquement dans l’historique du CLI
+`supabase_migrations.schema_migrations`. Avant toute commande `supabase db push`,
+comparez l’historique distant et les fichiers locaux ; ne créez pas
+artificiellement une entrée d’historique et ne réexécutez pas la migration de
+base des profils si elle a déjà été appliquée manuellement.
+
+L’application a besoin des tables de profils et de cette migration d’espace pour
+que l’inscription et les écrans de données fonctionnent réellement. Tant que
+elles ne sont pas appliquées, l’interface affiche l’erreur Supabase au lieu de
+fabriquer des données.
+
+## Hébergement Vercel
+
+Le site est servi comme application Vite statique. Dans les paramètres du projet
+Vercel, définissez `VITE_SUPABASE_URL` et
+`VITE_SUPABASE_PUBLISHABLE_KEY` avec les valeurs publiques du même projet
+Supabase. Ces valeurs sont intégrées au bundle navigateur ; ne configurez jamais
+une clé `service_role` ou `sb_secret_` avec le préfixe `VITE_`. Le dépôt contient
+un `.env.example` vide et aucun secret réel ne doit être ajouté à Git.
